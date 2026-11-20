@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Navbar } from "@/components/Navbar";
+import "./globals.css";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Terracotta Artisan Cafe | Billing & POS",
@@ -17,10 +18,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-cafe-surface text-cafe-text selection:bg-cafe-peach selection:text-cafe-primary">
         <Providers>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-          </div>
+          <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+            <div className="flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+            </div>
+          </Suspense>
         </Providers>
       </body>
     </html>
