@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #A63D26;
+  --color-accent: #C65F43;
+  --color-peach: #FFF0E7;
+  --color-cream: #FFF9F5;
+  --color-surface: #FFFDFB;
+  --color-text: #352B28;
+  --color-border: #F0E4DD;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Artisan Cafe Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFF9F5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #F0E4DD;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C65F43;
+}
+
+/* Terracotta Cafe Component Styles */
+@layer components {
+  .cafe-card {
+    background-color: #FFF9F5;
+    border: 1px solid #F0E4DD;
+    box-shadow: 0 4px 16px -2px rgba(166, 61, 38, 0.05);
+    border-radius: 1rem;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .cafe-card:hover {
+    border-color: #C65F43;
+    box-shadow: 0 8px 24px -4px rgba(166, 61, 38, 0.12);
+  }
+
+  .btn-primary {
+    background-color: #A63D26;
+    color: #FFFDFB;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 2px 8px rgba(166, 61, 38, 0.25);
+  }
+
+  .btn-primary:hover {
+    background-color: #8c321e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(166, 61, 38, 0.35);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-accent {
+    background-color: #C65F43;
+    color: #FFFDFB;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+
+  .btn-accent:hover {
+    background-color: #A63D26;
+  }
+
+  .btn-secondary {
+    background-color: #FFF0E7;
+    color: #A63D26;
+    border: 1px solid #F0E4DD;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+
+  .btn-secondary:hover {
+    background-color: #F0E4DD;
+  }
+
+  .chip-peach {
+    background-color: #FFF0E7;
+    color: #A63D26;
+    border: 1px solid rgba(166, 61, 38, 0.15);
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.65rem;
+  }
+}
