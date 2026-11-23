@@ -23,9 +23,6 @@ if (!global.mongooseCache) {
   global.mongooseCache = cached;
 }
 
-// export const DIRECT_REPLICA_URI =
-//   "mongodb://jeevikajeevi16_db_user:qcgK7JwYstZbjfkW@ac-hl3rjpm-shard-00-00.mh92blv.mongodb.net:27017,ac-hl3rjpm-shard-00-01.mh92blv.mongodb.net:27017,ac-hl3rjpm-shard-00-02.mh92blv.mongodb.net:27017/cafe_billing_db?ssl=true&replicaSet=atlas-127r9b-shard-0&authSource=admin&retryWrites=true&w=majority";
-
 export function cleanMongoUri(): string {
   const uri = process.env.MONGODB_URI || ""
   return uri.trim().replace(/^["']|["']$/g, "");
