@@ -18,6 +18,8 @@ import {
   Search,
 } from "lucide-react";
 import { IUserAccount, UserRole } from "@/types";
+import { UserManagementSkeleton } from "@/components/ui/Skeleton";
+import { apiUrl } from "@/lib/api";
 
 export function UserManagement() {
   const { data: session } = useSession();
@@ -41,7 +43,7 @@ export function UserManagement() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch(apiUrl("/api/users"));
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
@@ -66,7 +68,7 @@ export function UserManagement() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch(apiUrl("/api/users"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),
@@ -100,7 +102,7 @@ export function UserManagement() {
     }
 
     try {
-      const res = await fetch(`/api/users?id=${userId}`, {
+      const res = await fetch(apiUrl(`/api/users?id=${userId}`), {
         method: "DELETE",
       });
 
@@ -183,8 +185,12 @@ export function UserManagement() {
         </div>
       </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {isLoading ? (
+        <UserManagementSkeleton />
+      ) : (
+        <>
+          {/* Summary KPI Cards */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-cafe-border bg-cafe-cream p-5 shadow-cafe-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-cafe-text/70">Total Staff Accounts</span>
@@ -335,6 +341,8 @@ export function UserManagement() {
           </table>
         </div>
       </div>
+      </>
+      )}
 
       {/* Add New User Modal */}
       {isModalOpen && (

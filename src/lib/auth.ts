@@ -3,11 +3,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
-import { findMockUserByEmail } from "@/lib/mockData";
+import { findDbUserByEmail } from "@/lib/persistentDb";
 
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
     CredentialsProvider({
@@ -22,18 +23,45 @@ export const authOptions: NextAuthOptions = {
         }
 
         const email = credentials.email.toLowerCase().trim();
+        const password = credentials.password;
+
+        // 1. Delegate to Express Backend
+        try {
+          const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
+          const res = await fetch(`${backendUrl}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            return data.user;
+          } else {
+            const err = await res.json();
+            if (err?.error && !err.error.includes("Route")) {
+              throw new Error(err.error);
+            }
+          }
+        } catch (expressErr: any) {
+          if (expressErr?.message && !expressErr.message.includes("fetch failed") && !expressErr.message.includes("ECONNREFUSED")) {
+            throw expressErr;
+          }
+        }
+
         const db = await connectDB();
         let user: any = null;
 
+        // 2. Direct MongoDB fallback
         if (db) {
           try {
             user = await User.findOne({ email });
           } catch (e: any) {
-            console.warn("DB user lookup error, falling back to mock auth store:", e?.message);
+            console.warn("MongoDB user lookup notice:", e?.message);
           }
         }
 
-        // 1. If found in MongoDB
+        // If found in MongoDB
         if (user) {
           const isMatch = await bcrypt.compare(credentials.password, user.password);
           if (!isMatch) {
@@ -41,7 +69,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           if (user.active === false) {
-            throw new Error("Account is deactivated. Please contact your manager.");
+            throw new Error("Account has been deactivated. Please contact management.");
           }
 
           return {
@@ -52,27 +80,27 @@ export const authOptions: NextAuthOptions = {
           };
         }
 
-        // 2. Check Mock / In-Memory User Directory
-        const mockUser = findMockUserByEmail(email);
-        if (mockUser) {
-          const isMatch = await bcrypt.compare(credentials.password, mockUser.password);
+        // 2. Check Persistent Database Store
+        const dbUser = findDbUserByEmail(email);
+        if (dbUser) {
+          const isMatch = await bcrypt.compare(credentials.password, dbUser.password);
           if (!isMatch) {
             throw new Error("Incorrect password");
           }
 
-          if (mockUser.active === false) {
-            throw new Error("Account is deactivated. Please contact your manager.");
+          if (dbUser.active === false) {
+            throw new Error("Account has been deactivated. Please contact management.");
           }
 
           return {
-            id: mockUser._id,
-            name: mockUser.name,
-            email: mockUser.email,
-            role: mockUser.role,
+            id: dbUser._id,
+            name: dbUser.name,
+            email: dbUser.email,
+            role: dbUser.role,
           };
         }
 
-        throw new Error("No user registered with this email");
+        throw new Error("No active user registered with this email address");
       },
     }),
   ],

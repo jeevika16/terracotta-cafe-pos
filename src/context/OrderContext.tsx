@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { ITable, IMenuItem, ICartItem, IOrder, UserRole } from "@/types";
+import { apiUrl } from "@/lib/api";
 
 interface OrderContextType {
   selectedTable: ITable | null;
@@ -36,17 +37,19 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [menuItems, setMenuItems] = useState<IMenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch tables and menu
+  // Fetch tables and menu directly from backend API
   const refreshTables = async () => {
     try {
-      const res = await fetch("/api/tables");
+      const res = await fetch(apiUrl("/api/tables"));
       if (res.ok) {
         const data = await res.json();
-        setTables(data);
+        setTables(Array.isArray(data) ? data : []);
         if (selectedTable) {
-          const updated = data.find((t: ITable) => t._id === selectedTable._id);
+          const updated = (Array.isArray(data) ? data : []).find((t: ITable) => t._id === selectedTable._id);
           if (updated) setSelectedTable(updated);
         }
+      } else {
+        console.error("Failed to fetch tables, status:", res.status);
       }
     } catch (err) {
       console.error("Failed to fetch tables", err);
@@ -55,10 +58,12 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
   const refreshMenu = async () => {
     try {
-      const res = await fetch("/api/menu");
+      const res = await fetch(apiUrl("/api/menu"));
       if (res.ok) {
         const data = await res.json();
-        setMenuItems(data);
+        setMenuItems(Array.isArray(data) ? data : []);
+      } else {
+        console.error("Failed to fetch menu items, status:", res.status);
       }
     } catch (err) {
       console.error("Failed to fetch menu items", err);
@@ -66,18 +71,25 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const init = async () => {
       setIsLoading(true);
-      await Promise.all([refreshTables(), refreshMenu()]);
-      setIsLoading(false);
+      await Promise.allSettled([refreshTables(), refreshMenu()]);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     };
     init();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // When a table is selected, if it has an active order, fetch that order
   useEffect(() => {
     if (selectedTable?.currentOrderId) {
-      fetch(`/api/orders?id=${selectedTable.currentOrderId}`)
+      fetch(apiUrl(`/api/orders?id=${selectedTable.currentOrderId}`))
         .then((res) => res.json())
         .then((data) => {
           if (data && !data.error) {

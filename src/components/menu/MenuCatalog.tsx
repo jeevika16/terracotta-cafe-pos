@@ -4,11 +4,13 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useOrder } from "@/context/OrderContext";
 import { IMenuItem } from "@/types";
-import { Plus, Minus, Search, Edit3, Trash2, Clock, Coffee, ShoppingBag, ArrowRight } from "lucide-react";
+import { Plus, Minus, Search, Edit3, Trash2, Clock, Coffee, ShoppingBag, ArrowRight, UtensilsCrossed } from "lucide-react";
+import { MenuCatalogSkeleton } from "@/components/ui/Skeleton";
+import { apiUrl } from "@/lib/api";
 
 export function MenuCatalog() {
   const { data: session } = useSession();
-  const { menuItems, cart, addToCart, updateQuantity, selectedTable, refreshMenu, setIsCartOpen, cartTotal } = useOrder();
+  const { menuItems, cart, addToCart, updateQuantity, selectedTable, refreshMenu, setIsCartOpen, cartTotal, isLoading } = useOrder();
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingItem, setEditingItem] = useState<IMenuItem | null>(null);
@@ -65,7 +67,7 @@ export function MenuCatalog() {
     try {
       if (editingItem) {
         // Update existing item
-        const res = await fetch("/api/menu", {
+        const res = await fetch(apiUrl("/api/menu"), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ _id: editingItem._id, ...formData }),
@@ -76,7 +78,7 @@ export function MenuCatalog() {
         }
       } else {
         // Create new item
-        const res = await fetch("/api/menu", {
+        const res = await fetch(apiUrl("/api/menu"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
@@ -94,7 +96,7 @@ export function MenuCatalog() {
   const handleDeleteItem = async (id: string) => {
     if (!confirm("Are you sure you want to delete this menu item?")) return;
     try {
-      const res = await fetch(`/api/menu?id=${id}`, { method: "DELETE" });
+      const res = await fetch(apiUrl(`/api/menu?id=${id}`), { method: "DELETE" });
       if (res.ok) {
         await refreshMenu();
       } else {
@@ -194,8 +196,19 @@ export function MenuCatalog() {
       </div>
 
       {/* Menu Items Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filteredItems.map((item) => {
+      {isLoading ? (
+        <MenuCatalogSkeleton count={8} />
+      ) : filteredItems.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-cafe-border p-12 text-center bg-cafe-cream">
+          <UtensilsCrossed className="h-10 w-10 text-cafe-accent mx-auto mb-3 opacity-60" />
+          <p className="text-sm font-semibold text-cafe-primary">No menu items found</p>
+          <p className="text-xs text-cafe-text/60 mt-1">
+            {searchQuery ? `No items matching "${searchQuery}".` : "No menu items in this category."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredItems.map((item) => {
           const cartItem = cart.find((ci) => ci.menuItemId === item._id);
           const count = cartItem ? cartItem.quantity : 0;
 
@@ -316,7 +329,8 @@ export function MenuCatalog() {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Floating Bottom Bar when items are selected */}
       {totalCartCount > 0 && (

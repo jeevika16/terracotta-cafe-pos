@@ -5,10 +5,12 @@ import { useSession } from "next-auth/react";
 import { useOrder } from "@/context/OrderContext";
 import { ITable, TableStatus } from "@/types";
 import { Plus, Edit2, CheckCircle2, Clock, Coffee, AlertCircle } from "lucide-react";
+import { TableGridSkeleton } from "@/components/ui/Skeleton";
+import { apiUrl } from "@/lib/api";
 
 export function TableGrid() {
   const { data: session } = useSession();
-  const { tables, selectedTable, setSelectedTable, refreshTables } = useOrder();
+  const { tables, selectedTable, setSelectedTable, refreshTables, isLoading } = useOrder();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTableNumber, setNewTableNumber] = useState("");
   const [editingTable, setEditingTable] = useState<ITable | null>(null);
@@ -37,7 +39,7 @@ export function TableGrid() {
     if (!newTableNumber) return;
 
     try {
-      const res = await fetch("/api/tables", {
+      const res = await fetch(apiUrl("/api/tables"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -46,6 +48,8 @@ export function TableGrid() {
           section: "Main Area",
         }),
       });
+
+      console.log("Create table response:", res);
 
       if (res.ok) {
         setIsAddModalOpen(false);
@@ -62,7 +66,7 @@ export function TableGrid() {
 
   const handleUpdateStatus = async (table: ITable, newStatus: TableStatus) => {
     try {
-      const res = await fetch("/api/tables", {
+      const res = await fetch(apiUrl("/api/tables"), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: table._id, status: newStatus }),
@@ -104,8 +108,17 @@ export function TableGrid() {
       </div>
 
       {/* Tables Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-        {tables.map((table) => {
+      {isLoading ? (
+        <TableGridSkeleton count={8} />
+      ) : tables.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-cafe-border p-12 text-center bg-cafe-cream">
+          <Coffee className="h-10 w-10 text-cafe-accent mx-auto mb-3 opacity-60" />
+          <p className="text-sm font-semibold text-cafe-primary">No tables found</p>
+          <p className="text-xs text-cafe-text/60 mt-1">Use the "Add Table" button above to add your first cafe dining table.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+          {tables.map((table) => {
           const isSelected = selectedTable?._id === table._id;
           return (
             <div
@@ -163,7 +176,8 @@ export function TableGrid() {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Modal: Add New Table (Staff/Admin) */}
       {isAddModalOpen && (

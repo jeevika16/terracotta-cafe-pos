@@ -6,7 +6,7 @@ import { KitchenNotificationProvider } from "@/components/notifications/KitchenN
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false}>
       <OrderProvider>
         <KitchenNotificationProvider>
           {children}

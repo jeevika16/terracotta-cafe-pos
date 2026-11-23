@@ -5,10 +5,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AnalyticsDashboard } from "@/components/dashboard/AnalyticsDashboard";
 import { UserManagement } from "@/components/dashboard/UserManagement";
-import { SystemDatabaseTab } from "@/components/dashboard/SystemDatabaseTab";
-import { ShieldAlert, BarChart3, Users, Database } from "lucide-react";
+import { ShieldAlert, BarChart3, Users } from "lucide-react";
 
-type DashboardTab = "ANALYTICS" | "USERS" | "DATABASE";
+type DashboardTab = "ANALYTICS" | "USERS";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -83,24 +82,11 @@ export default function DashboardPage() {
             Provision
           </span>
         </button>
-
-        <button
-          onClick={() => setActiveTab("DATABASE")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-            activeTab === "DATABASE"
-              ? "bg-cafe-primary text-cafe-surface shadow-cafe-sm"
-              : "text-cafe-text hover:text-cafe-primary hover:bg-cafe-peach/50"
-          }`}
-        >
-          <Database className="h-4 w-4" />
-          <span>Database & Seeds</span>
-        </button>
       </div>
 
       {/* Tab Panels */}
       {activeTab === "ANALYTICS" && <AnalyticsDashboard />}
       {activeTab === "USERS" && <UserManagement />}
-      {activeTab === "DATABASE" && <SystemDatabaseTab />}
     </div>
   );
 }

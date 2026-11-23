@@ -15,6 +15,8 @@ import {
 } from "recharts";
 import { IndianRupee, ShoppingBag, TrendingUp, Award, Calendar, Coffee, FileSpreadsheet } from "lucide-react";
 import { ISalesSummary, ISoldItemMetric, IDailySalesMetric } from "@/types";
+import { AnalyticsSkeleton } from "@/components/ui/Skeleton";
+import { apiUrl } from "@/lib/api";
 
 export function AnalyticsDashboard() {
   const [summary, setSummary] = useState<ISalesSummary>({
@@ -28,7 +30,7 @@ export function AnalyticsDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics")
+    fetch(apiUrl("/api/analytics"))
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load analytics");
         return res.json();
@@ -43,14 +45,7 @@ export function AnalyticsDashboard() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="text-center">
-          <Coffee className="mx-auto h-8 w-8 text-cafe-primary animate-bounce" />
-          <p className="mt-2 text-xs font-semibold text-cafe-accent">Brewing analytics & accounts...</p>
-        </div>
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   return (

@@ -1,0 +1,16 @@
+{
+  "tables": [
+    {
+      "_id": "tbl_1795178664282",
+      "tableNumber": "09",
+      "capacity": 4,
+      "section": "Main Area",
+      "status": "AVAILABLE",
+      "activeGuests": 0,
+      "currentOrderId": null
+    }
+  ],
+  "menuItems": [],
+  "users": [],
+  "orders": []
+}

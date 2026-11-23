@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from "r
 import { useSession } from "next-auth/react";
 import { useOrder } from "@/context/OrderContext";
 import { Bell, Volume2, VolumeX, X, Coffee, CheckCircle2, AlertTriangle, Radio } from "lucide-react";
+import { apiUrl } from "@/lib/api";
 
 export interface IKitchenNotification {
   id: string;
@@ -164,7 +165,7 @@ export function KitchenNotificationProvider({ children }: { children: React.Reac
       }
     };
 
-    connect();
+    // connect();
 
     return () => {
       isCancelled = true;
@@ -179,7 +180,7 @@ export function KitchenNotificationProvider({ children }: { children: React.Reac
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch("/api/notifications");
+        const res = await fetch(apiUrl("/api/notifications"));
         if (res.ok) {
           const data = await res.json();
           if (data.notifications && data.notifications.length > 0) {

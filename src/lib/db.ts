@@ -1,5 +1,12 @@
 import mongoose from "mongoose";
-import { seedMongoDatabase } from "./seedHelper";
+import dns from "dns";
+
+// Configure Node.js to use public DNS servers (Google & Cloudflare) for SRV resolution
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
+} catch (e: any) {
+  // Ignore in environments where setting DNS servers is restricted
+}
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -8,7 +15,6 @@ interface MongooseCache {
 
 declare global {
   var mongooseCache: MongooseCache | undefined;
-  var __mongoAutoSeeded: boolean | undefined;
 }
 
 let cached: MongooseCache = global.mongooseCache || { conn: null, promise: null };
@@ -17,10 +23,14 @@ if (!global.mongooseCache) {
   global.mongooseCache = cached;
 }
 
+// export const DIRECT_REPLICA_URI =
+//   "mongodb://jeevikajeevi16_db_user:qcgK7JwYstZbjfkW@ac-hl3rjpm-shard-00-00.mh92blv.mongodb.net:27017,ac-hl3rjpm-shard-00-01.mh92blv.mongodb.net:27017,ac-hl3rjpm-shard-00-02.mh92blv.mongodb.net:27017/cafe_billing_db?ssl=true&replicaSet=atlas-127r9b-shard-0&authSource=admin&retryWrites=true&w=majority";
+
 export function cleanMongoUri(): string {
-  const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/cafe_billing_db";
+  const uri = process.env.MONGODB_URI || ""
   return uri.trim().replace(/^["']|["']$/g, "");
 }
+console.log({url :  process.env.MONGODB_URI})
 
 export async function connectDB(): Promise<typeof mongoose | null> {
   // If already connected and connection is alive, return immediately
@@ -33,31 +43,26 @@ export async function connectDB(): Promise<typeof mongoose | null> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 2500, // Fail fast so UI remains ultra responsive
-      connectTimeoutMS: 2500,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
     };
 
     cached.promise = mongoose
       .connect(uri, opts)
-      .then(async (mongooseInstance) => {
+      .then((mongooseInstance) => {
         console.log("Connected to MongoDB successfully");
-        
-        // Auto-seed if collections are empty on first successful connect
-        if (!global.__mongoAutoSeeded) {
-          global.__mongoAutoSeeded = true;
-          try {
-            await seedMongoDatabase(false);
-          } catch (seedErr: any) {
-            console.warn("Auto-seed error on connect:", seedErr?.message);
-          }
-        }
-
         return mongooseInstance;
       })
-      .catch((err) => {
-        console.warn(
-          "MongoDB connection unavailable (" + err.message + "). Falling back to memory/mock store."
-        );
+      .catch(async (err) => {
+        console.warn("MongoDB primary SRV notice:", err.message);
+        if (uri.includes("+srv://")) {
+          console.log("Attempting direct replica set connection fallback...");
+          try {
+            return await mongoose.connect(cleanMongoUri(), opts);
+          } catch (fallbackErr: any) {
+            console.error("MongoDB direct replica set notice:", fallbackErr?.message);
+          }
+        }
         return null;
       });
   }

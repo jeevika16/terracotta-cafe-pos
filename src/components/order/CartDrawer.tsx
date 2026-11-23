@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useOrder } from "@/context/OrderContext";
 import { X, Plus, Minus, Trash2, ShoppingBag, CreditCard, Banknote, QrCode, CheckCircle2, Receipt } from "lucide-react";
 import { PaymentMethod } from "@/types";
+import { apiUrl } from "@/lib/api";
 
 export function CartDrawer() {
   const { data: session } = useSession();
@@ -45,7 +46,7 @@ export function CartDrawer() {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch("/api/orders", {
+      const res = await fetch(apiUrl("/api/orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -91,7 +92,7 @@ export function CartDrawer() {
     if (!activeOrder) return;
     try {
       setIsSubmitting(true);
-      const res = await fetch("/api/orders", {
+      const res = await fetch(apiUrl("/api/orders"), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
