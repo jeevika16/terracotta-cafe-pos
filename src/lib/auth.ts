@@ -25,30 +25,32 @@ export const authOptions: NextAuthOptions = {
         const email = credentials.email.toLowerCase().trim();
         const password = credentials.password;
 
-        // 1. Delegate to Express Backend
-        try {
-          const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
-          const res = await fetch(`${backendUrl}/api/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
+        // 1. If an external backend is configured, delegate auth to it
+        if (process.env.BACKEND_URL) {
+          try {
+            const res = await fetch(`${process.env.BACKEND_URL}/api/auth/login`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
 
-          if (res.ok) {
-            const data = await res.json();
-            return data.user;
-          } else {
-            const err = await res.json();
-            if (err?.error && !err.error.includes("Route")) {
-              throw new Error(err.error);
+            if (res.ok) {
+              const data = await res.json();
+              return data.user;
+            } else {
+              const err = await res.json();
+              if (err?.error && !err.error.includes("Route")) {
+                throw new Error(err.error);
+              }
             }
-          }
-        } catch (expressErr: any) {
-          if (expressErr?.message && !expressErr.message.includes("fetch failed") && !expressErr.message.includes("ECONNREFUSED")) {
-            throw expressErr;
+          } catch (expressErr: any) {
+            if (expressErr?.message && !expressErr.message.includes("fetch failed") && !expressErr.message.includes("ECONNREFUSED")) {
+              throw expressErr;
+            }
           }
         }
 
+        // 2. Direct MongoDB authentication (native on Vercel and unified local dev)
         const db = await connectDB();
         let user: any = null;
 

@@ -9,9 +9,13 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-    return {
-      beforeFiles: [
+    // If an external backend URL is explicitly configured, forward /api calls to it.
+    // Otherwise, Next.js natively handles the API routes serverlessly (ideal for Vercel deployment & unified dev).
+    console.log({backendUrl: process.env.BACKEND_URL});
+    if (process.env.BACKEND_URL) {
+      const backendUrl = process.env.BACKEND_URL;
+
+      return [
         {
           source: '/api/tables/:path*',
           destination: `${backendUrl}/api/tables/:path*`,
@@ -60,8 +64,9 @@ const nextConfig = {
           source: '/api/notifications',
           destination: `${backendUrl}/api/notifications`,
         },
-      ],
-    };
+      ];
+    }
+    return [];
   },
 };
 
